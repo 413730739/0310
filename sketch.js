@@ -6,6 +6,7 @@ let table;
 let currentQuestionIndex = 0;
 let correctCount = 0;
 let incorrectCount = 0;
+let fireworks = []; // 煙火陣列
 
 function preload() {
   // 載入 Excel 檔案
@@ -66,6 +67,15 @@ function draw() {
   textSize(18);
   fill('#390099');
   text(`答對: ${correctCount} 答錯: ${incorrectCount}`, windowWidth / 2, windowHeight / 2 + 250);
+
+  // 更新並顯示煙火
+  for (let i = fireworks.length - 1; i >= 0; i--) {
+    fireworks[i].update();
+    fireworks[i].show();
+    if (fireworks[i].done()) {
+      fireworks.splice(i, 1);
+    }
+  }
 }
 
 function checkAnswer() {
@@ -80,6 +90,11 @@ function checkAnswer() {
   if (selected === correctAnswer) {
     resultText = '答案正確';
     correctCount++;
+    // 新增隨機數量的煙火效果
+    const fireworkCount = int(random(5, 11)); // 隨機生成 5 到 10 個煙火
+    for (let i = 0; i < fireworkCount; i++) {
+      fireworks.push(new Firework(random(width), random(height / 2)));
+    }
   } else {
     resultText = '答案錯誤';
     incorrectCount++;
@@ -111,5 +126,62 @@ function displayQuestion() {
     radio.hide();
     input.show();
     input.value(''); // 清空輸入框
+  }
+}
+
+// 煙火類別
+class Firework {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.particles = [];
+    const particleCount = random(50, 150); // 每個煙火隨機粒子數量
+    for (let i = 0; i < particleCount; i++) {
+      this.particles.push(new Particle(this.x, this.y));
+    }
+  }
+
+  update() {
+    for (let particle of this.particles) {
+      particle.update();
+    }
+  }
+
+  show() {
+    for (let particle of this.particles) {
+      particle.show();
+    }
+  }
+
+  done() {
+    return this.particles.every(particle => particle.done());
+  }
+}
+
+class Particle {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.vx = random(-2, 2);//  隨機速度
+    this.vy = random(-5, -1);// 隨機速度
+    this.alpha = 255;// 透明度
+    this.size = random(3, 8); // 粒子大小隨機
+    this.color = color(random(255), random(255), random(255)); // 隨機顏色
+  }
+
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.alpha -= 5;
+  }
+
+  show() {
+    noStroke();
+    fill(red(this.color), green(this.color), blue(this.color), this.alpha); // 使用粒子的顏色
+    ellipse(this.x, this.y, this.size); // 使用隨機大小
+  }
+
+  done() {
+    return this.alpha <= 0;
   }
 }
